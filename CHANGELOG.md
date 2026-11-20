@@ -1,5 +1,14 @@
 # Historique des versions – UTGL 5P
 
+## v1.3.0 – 21 novembre 2026 (recommandations de l'évaluation, priorité P0)
+- Justification de chaque score : un clic sur une valeur du suivi mensuel des KPI affiche la période, la source retenue et la règle appliquée (INFOMED, Compile ou classeur V8.2), le lot d'import (identifiant, date, auteur, statut), les rapports reçus et attendus, la formule, le seuil, la version du référentiel des cibles et l'état de la période ; distinction entre zéro déclaré, donnée manquante et non applicable.
+- Clôture des périodes (Outils › Clôture des périodes) : brouillon → soumis (UTGL provinciale) → validé (DPS) → publié (UTGL centrale), renvoi « à corriger » motivé. Séparation des tâches (celui qui soumet ne valide pas ; celui qui valide ne publie pas). Une période soumise verrouille les imports de ses mois ; une période publiée fige les chiffres provinciaux (tableaux de bord, rapports GTM, export COPIL), avec numéro de version et empreinte SHA-256. Toute correction après publication passe par une réouverture motivée qui archive la version précédente. Règles appliquées par le serveur.
+- Rapprochement des sources (Connecteur INFOMED › Rapprochement et bilan avant validation) : valeurs acceptées, remplacées, à arbitrer (écart de plus de 10 points), rejetées, doublons d'import, valeurs du classeur écartées ; export Excel.
+- Audit enrichi : province concernée, période et motif pour les étapes de clôture, les changements de statut d'import et les exports de bilan.
+- Méthode V8.2 stricte : prise en compte de P4_COUV_ESS (présent dans les feuilles de surveillance du classeur, hors des 71 KPI), ce qui reproduit exactement les scores du classeur (Kinshasa T1 et T3, Haut-Uélé T2).
+- Export COPIL (Power BI) : état de la période, version publiée et empreinte ; page de traçabilité des rapports GTM : état de la période.
+- Justification : rapports reçus et attendus par BCZ ajoutés aux données INFOMED du pilier 1.
+
 ## v1.2.4 – 20 novembre 2026
 - Décisions DPS : nouvelle section « Produits en rupture dans les structures sanitaires » (INFOMED, rapport n° 37), par province et par mois de 2026 : structures ayant rapporté, structures en rupture, pourcentage.
 - Export Excel des produits traceurs (Décisions DPS, Bulletin & alertes) : feuille « Ruptures ESS » par province et colonne correspondante dans la synthèse.
