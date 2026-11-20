@@ -1476,7 +1476,9 @@ async function trcExport(provs,y,months,label){if(!window.XLSX)return toast('Bib
  provs.forEach(p=>{const rows=trcSheetRows(p,y,months);if(!rows.length)return;tot+=rows.length;const t=trcCtx(p,y,months);syn.push({'Province':p,'CDR':CDR[p]||'','Mois':t.m?MOIS[t.m-1]+' '+y:'','Produits suivis':t.rows.length,'Rupture confirmée CDR':t.rows.filter(isRupCdr).length,'Rupture BCZ':t.lv.BCZ.R,'Rupture ESS':t.lv.ESS.R,'Rupture à au moins un niveau':t.rup.length});
   const ru=rows.filter(r=>r['Rupture confirmée CDR']==='Oui');const ws1=XLSX.utils.json_to_sheet(ru.length?ru:[{'Province':p,'Produit':'Aucune rupture confirmée au CDR'}]);ws1['!cols']=[12,12,14,22,48,9,9,9,14,14,14,30,12,10,8].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws1,('Ruptures CDR '+p).slice(0,31));
   const ws2=XLSX.utils.json_to_sheet(rows);ws2['!cols']=ws1['!cols'];XLSX.utils.book_append_sheet(wb,ws2,('Traceurs '+p).slice(0,31))});
- if(!tot)return toast('Aucune donnée DISMED pour cette période');const ws0=XLSX.utils.json_to_sheet(syn);ws0['!cols']=[14,12,16,14,20,12,12,24].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws0,'Synthèse');wb.SheetNames.unshift(wb.SheetNames.pop());
+ provs.forEach(p=>{const rp=(typeof ruptProd==='function')?ruptProd(p,y,months):null;if(!rp)return;const ru=rp.rows.filter(x=>x.k>0);tot+=ru.length;const s=syn.find(x=>x.Province===p);if(s)s['Produits en rupture dans les structures (INFOMED n° 37)']=ru.length;else syn.push({'Province':p,'Produits en rupture dans les structures (INFOMED n° 37)':ru.length});
+  const ws=XLSX.utils.json_to_sheet(ru.length?ru.map(x=>({'Province':p,'Mois':MOIS[rp.m-1]+' '+y,'Produit':x.prod,'Programme':GRP[x.grp]||x.grp,'Structures ayant rapporté':x.n,'Structures en rupture':x.k,'% en rupture':Math.round(x.t*1000)/10})):[{'Province':p,'Produit':'Aucun produit en rupture'}]);ws['!cols']=[12,12,52,18,14,14,12].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws,('Ruptures ESS '+p).slice(0,31))});
+ if(!tot)return toast('Aucune donnée DISMED ni INFOMED (rapport n° 37) pour cette période');const ws0=XLSX.utils.json_to_sheet(syn);ws0['!cols']=[14,12,16,14,20,12,12,24].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws0,'Synthèse');wb.SheetNames.unshift(wb.SheetNames.pop());
  const out=XLSX.write(wb,{type:'array',bookType:'xlsx'});const fn='Produits_traceurs_'+(provs.length===1?provs[0].replace(/\W+/g,'_'):'provinces')+'_'+label.replace(/\W+/g,'_')+'.xlsx';
  await saveFile(fn,out,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');audit('Export Excel produits traceurs',provs.join(', '),label)}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-trcx]');if(!b)return;const w=b.dataset.trcx;
@@ -1521,6 +1523,20 @@ function covTable(){const L=covLastMonth();const ys=[2024,2025,2026].filter(y=>y
 // rapports GTM : lacunes jointes au contexte (écran, PDF, PPTX)
 (()=>{const _c=repCtx;repCtx=function(){const c=_c.apply(this,arguments);if(c){const {R}=repState();const ms=R.type==='M'?[+R.m]:perMonths('T'+R.q);c.cov=covGaps(c.p,S.year,ms);c.covMonths=ms}return c};
  const _r=VIEWS.rapports;VIEWS.rapports=()=>{let h=_r();const c=repCtx();if(c)h=h.replace('<h3>Données utilisées</h3>','<h3>Données utilisées</h3>'+covNote(c.p,S.year,c.covMonths,c.label));return h}})();
+// ---------------- PRODUITS EN RUPTURE DANS LES STRUCTURES (INFOMED, rapport n° 37) · v1.2.4 ----------------
+// Demande de l'UTGL (20/11/2026) : situation des produits en rupture par province, dans le rapport DPS.
+TYPELAB.RUPTPROD='INFOMED · produits en rupture dans les structures (rapport n° 37)';
+function ruptProd(p,y,months){const d=IMPDOCS.find(x=>x.type==='RUPTPROD'&&x.prov===p&&+x.year===+y&&x.status!=='REJETÉ');if(!d||!Array.isArray(d.parts))return null;
+ const ps=d.parts.filter(x=>months.includes(+x.month)&&(x.rows||[]).length).sort((a,b)=>b.month-a.month);if(!ps.length)return null;const pt=ps[0];
+ const rows=pt.rows.map(([prod,grp,n,k])=>({prod,grp,n,k,t:n?k/n:null})).filter(r=>r.n>0).sort((a,b)=>(b.t-a.t)||(b.k-a.k));return {m:+pt.month,rows,at:d.at}}
+function ruptPanel(p,y,months){const r=ruptProd(p,y,months);
+ if(!r)return `<div class="panel" style="margin-top:12px"><h3>Produits en rupture dans les structures sanitaires</h3><p class="small muted">Aucune donnée INFOMED (rapport n° 37) importée pour ${esc(p)} sur la période.</p></div>`;
+ const ru=r.rows.filter(x=>x.k>0);const top=ru.slice(0,25);const cls=t=>t>=.5?'bad':t>=.2?'warn':'ok';
+ return `<div class="panel" style="margin-top:12px"><h3>Produits en rupture dans les structures sanitaires · ${esc(p)} · ${MOIS[r.m-1]} ${y}</h3>
+ <p class="small muted">Source : INFOMED, rapport n° 37 (structures ayant rapporté le produit, dont structures en rupture). ${ru.length} produit(s) en rupture dans au moins une structure sur ${r.rows.length} suivis. Liste complète dans l’export Excel.</p>
+ <div class="tw"><table class="small"><thead><tr><th>Produit</th><th>Programme</th><th class="n">Structures ayant rapporté</th><th class="n">En rupture</th><th class="n">% en rupture</th></tr></thead><tbody>${top.map(x=>`<tr><td>${esc(x.prod)}</td><td>${esc(GRP[x.grp]||x.grp)}</td><td class="n">${x.n}</td><td class="n">${x.k}</td><td class="n">${pill(Math.round(x.t*100)+' %',cls(x.t))}</td></tr>`).join('')||'<tr><td colspan="5">Aucun produit en rupture.</td></tr>'}</tbody></table></div>
+ <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="sm" data-trcx="dps">Exporter (Excel)</button></div></div>`}
+(()=>{const _d=VIEWS.dps;VIEWS.dps=()=>{const h=_d();if(!hasData(S.prov,S.year,S.per))return h;return h+ruptPanel(S.prov,S.year,perMonths(S.per))}})();
 
 </script>
 

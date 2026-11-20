@@ -1,5 +1,9 @@
 # Historique des versions – UTGL 5P
 
+## v1.2.4 – 20 novembre 2026
+- Décisions DPS : nouvelle section « Produits en rupture dans les structures sanitaires » (INFOMED, rapport n° 37), par province et par mois de 2026 : structures ayant rapporté, structures en rupture, pourcentage.
+- Export Excel des produits traceurs (Décisions DPS, Bulletin & alertes) : feuille « Ruptures ESS » par province et colonne correspondante dans la synthèse.
+
 ## v1.2.3 – 20 novembre 2026 (retours de l'UTGL)
 - Exhaustivité du BCZ intégrée au score du pilier 1 (méthode corrigée) ; la méthode V8.2 stricte reste fidèle au classeur.
 - Validation des données de la province par l'UTGL provinciale (la DPS conserve la possibilité de valider) ; messages et guide mis à jour.
