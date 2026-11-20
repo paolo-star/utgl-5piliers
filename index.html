@@ -7,7 +7,66 @@
 <link rel="icon" href="favicon.png">
 </head>
 <body>
-<script>var RT=null;</script>
+<script src="vendor/supabase.js"></script>
+<script>
+// UTGL 5P · connexion à la base (authentification, profils, documents partagés)
+var SB_URL='https://ymdmbdcjysmztuwmfikq.supabase.co';
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltZG1iZGNqeXNtenR1d21maWtxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUxMzM2NjAsImV4cCI6MjExMDcwOTY2MH0.QgHnmk1Es9GYE7dE_HX6Vp5wfrZw9p5W6U0YVGi5jvg';
+var SB=null,ME=null,RT_EVT=null;
+try{SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{flowType:'pkce',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})}catch(e){console.warn('Base indisponible',e)}
+var RT_READY=(async()=>{if(!SB)return;
+ try{SB.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')RT_EVT='recovery'});
+  const {data:{session}}=await SB.auth.getSession();
+  if(/[?&]code=/.test(location.search)){history.replaceState(null,'',location.pathname+location.hash)}
+  if(!session)return;const u=session.user;
+  const {data}=await SB.from('app_users').select('*').eq('id',u.id).maybeSingle();
+  ME=Object.assign({email:u.email,name:'',role:'LECT',prov:'',active:false},data||{},{id:u.id,confirmed:!!u.email_confirmed_at})}catch(e){console.warn(e)}})();
+var RT=(()=>{
+ const ok=r=>{if(r&&r.error)throw Object.assign(new Error(r.error.message),{code:r.error.code});return r};
+ const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+ const live=()=>ME&&ME.active&&ME.confirmed;
+ // --- profils (collection « roles » de l'application = table des utilisateurs) ---
+ const roleRow=u=>({id:u.id,exists:true,data:()=>({role:u.role,prov:u.prov||'',at:u.updated_at||u.created_at,by:u.updated_by||'',email:u.email,name:u.name})});
+ async function fetchRoles(){const r=ok(await SB.from('app_users').select('*').eq('active',true).order('created_at'));return r.data}
+ // --- abonnement temps réel + resynchronisation ---
+ function watch(table,filter,refresh){let t=null;const run=()=>{clearTimeout(t);t=setTimeout(refresh,250)};
+  const ch=SB.channel('w'+rid()).on('postgres_changes',Object.assign({event:'*',schema:'public',table},filter?{filter}:{}),run).subscribe();
+  const iv=setInterval(refresh,300000);const vis=()=>{if(document.visibilityState==='visible')run()};document.addEventListener('visibilitychange',vis);
+  return ()=>{clearTimeout(t);clearInterval(iv);document.removeEventListener('visibilitychange',vis);SB.removeChannel(ch)}}
+ const snapOf=rows=>({docs:rows.map(r=>({id:r.id,exists:true,data:()=>r.data})),size:rows.length,empty:!rows.length});
+ class Doc{constructor(c,i){this.c=c;this.i=i;this.id=i}
+  async set(obj){if(this.c==='roles'){ok(await SB.from('app_users').update({role:obj.role,prov:obj.prov||'',active:true,updated_at:new Date().toISOString(),updated_by:ME.id}).eq('id',this.i));return}
+   ok(await SB.from('docs').upsert({col:this.c,id:this.i,data:obj},{onConflict:'col,id'}))}
+  async update(p){if(this.c==='roles')return this.set(p);ok(await SB.rpc('doc_merge',{c:this.c,i:this.i,patch:p}))}
+  async delete(){if(this.c==='roles'){ok(await SB.from('app_users').update({role:'LECT',prov:'',updated_at:new Date().toISOString(),updated_by:ME.id}).eq('id',this.i));return}
+   ok(await SB.from('docs').delete().eq('col',this.c).eq('id',this.i))}
+  async get(){const r=ok(await SB.from('docs').select('id,data').eq('col',this.c).eq('id',this.i).maybeSingle());return r.data?{id:this.i,exists:true,data:()=>r.data.data}:{id:this.i,exists:false,data:()=>undefined}}
+  onSnapshot(cb,err){const f=()=>this.get().then(cb,e=>err&&err(e));f();return watch('docs','col=eq.'+this.c,f)}}
+ class Col{constructor(c,o){this.c=c;this.o=o||{}}
+  orderBy(f,d){return new Col(this.c,Object.assign({},this.o,{ord:[f,d||'asc']}))}
+  limit(n){return new Col(this.c,Object.assign({},this.o,{lim:n}))}
+  where(f,op,v){const w=(this.o.w||[]).concat([[f,op,v]]);return new Col(this.c,Object.assign({},this.o,{w}))}
+  doc(i){return new Doc(this.c,i||rid())}
+  async add(obj){const i=rid();ok(await SB.from('docs').insert({col:this.c,id:i,data:obj}));return new Doc(this.c,i)}
+  async rows(){if(this.c==='roles')return (await fetchRoles()).map(u=>({id:u.id,data:roleRow(u).data()}));
+   const P=1000;let out=[],from=0;
+   for(;;){let q=SB.from('docs').select('id,data').eq('col',this.c);
+    (this.o.w||[]).forEach(([f,op,v])=>{const k='data->>'+f;q=op==='=='?q.eq(k,String(v)):op==='in'?q.in(k,v.map(String)):q});
+    if(this.o.ord)q=q.order('data->>'+this.o.ord[0],{ascending:this.o.ord[1]!=='desc'});else q=q.order('id');
+    const n=this.o.lim?Math.min(this.o.lim-out.length,P):P;q=q.range(from,from+n-1);
+    const r=ok(await q);out=out.concat(r.data);if(r.data.length<n||(this.o.lim&&out.length>=this.o.lim))break;from+=n}
+   return out}
+  async get(){return snapOf(await this.rows())}
+  onSnapshot(cb,err){const f=()=>this.rows().then(r=>cb(snapOf(r)),e=>err&&err(e));f();
+   return this.c==='roles'?watch('app_users',null,f):watch('docs','col=eq.'+this.c,f)}}
+ const DBAPI={collection:c=>new Col(c),doc:p=>{const k=p.indexOf('/');return new Doc(p.slice(0,k),p.slice(k+1))}};
+ const USERAPI={id:async()=>ME.id,isOwner:()=>ME.role==='ADMIN',canEdit:()=>ME.role==='ADMIN',can:n=>n==='data.write'?ME.role!=='LECT':ME.role==='ADMIN',
+  me:async()=>({id:ME.id,name:ME.name||ME.email}),
+  profiles:async ids=>{const r=ok(await SB.from('app_users').select('id,name,email').in('id',ids));const o={};r.data.forEach(u=>o[u.id]={id:u.id,name:u.name||u.email,email:u.email});return o},
+  search:async q=>{q=String(q||'').replace(/[%,()]/g,' ').trim();let x=SB.from('app_users').select('id,name,email,role,prov').order('email').limit(20);if(q)x=x.or('email.ilike.%'+q+'%,name.ilike.%'+q+'%');const r=ok(await x);return r.data.map(u=>({id:u.id,name:(u.name?u.name+' · ':'')+u.email,email:u.email}))}};
+ return {use:async n=>{await RT_READY;if(!live())return null;return n==='db'?DBAPI:n==='user'?USERAPI:null}};
+})();
+</script>
 <title>5Piliers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -962,7 +1021,7 @@ VIEWS.admin=()=>{const r=ROLES[MYROLE.role]||ROLES.LECT;const ids=[...new Set(RO
  const matrix=`<div class="tw"><table><thead><tr><th>Profil</th><th>Périmètre</th><th>Importer</th><th>Valider</th><th>Publier</th><th>CAPA</th><th>Formulaire</th><th>Réappro.</th><th>Administration</th></tr></thead><tbody>${Object.entries(ROLES).map(([k,x])=>`<tr><td><b>${esc(x.lab)}</b></td><td>${x.scope==='prov'?'Sa province':'National'}${x.valOnly?'<br><span class="small muted">données validées uniquement</span>':''}</td>${['imp','val','pub','capa','form','rea','adm'].map(a=>`<td class="hm c-${x[a]?'ok':'nd'}">${x[a]?'Oui':'—'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
  return hdr('Outils · Gouvernance','Rôles & audit','Attribution des profils par niveau de la pyramide sanitaire et journal des transactions (qui, quand, quoi).','')+
  `<div class="panel"><h3>Votre profil</h3><p>${pill(r.lab+(MYROLE.prov?' · '+MYROLE.prov:''),'info')} ${USER&&USER.isOwner&&USER.isOwner()?'<span class="small muted">Propriétaire de l’application : administrateur.</span>':''}</p></div>
- <div class="panel" style="margin-top:12px"><h3>Matrice des droits par profil</h3>${matrix}<p class="small muted">Les droits sont appliqués par l’application (boutons, écrans, périmètre provincial) et chaque action est journalisée. La protection serveur de la base porte sur la table des rôles (modifiable par les éditeurs seulement). Une séparation stricte des droits au niveau serveur suppose l’hébergement institutionnel prévu au contrat.</p></div>
+ <div class="panel" style="margin-top:12px"><h3>Matrice des droits par profil</h3>${matrix}<p class="small muted">Les droits sont appliqués par l’application (boutons, écrans, périmètre provincial) et chaque action est journalisée. Les mêmes règles sont appliquées par le serveur de la base (accès par profil et par province) : une écriture refusée par l’application l’est aussi par la base.</p></div>
  ${r.adm?`<div class="panel" style="margin-top:12px"><h3>Attribuer un profil</h3><div class="row" style="gap:8px;flex-wrap:wrap"><input id="rlQ" placeholder="Rechercher une personne de l’organisation" style="min-width:260px"><select id="rlWho">${(S.rlHits||[]).map(h=>`<option value="${esc(h.id)}">${esc(h.name||h.email||h.id)}</option>`).join('')||'<option value="">— tapez un nom —</option>'}</select><select id="rlRole">${Object.entries(ROLES).filter(([k])=>k!=='LECT').map(([k,x])=>`<option value="${k}">${esc(x.lab)}</option>`).join('')}</select><select id="rlProv"><option value="">(national)</option>${D.TDR.map(p=>`<option>${esc(p)}</option>`).join('')}</select><button class="pri" data-act2="setrole">Enregistrer</button></div><p class="small muted">Les profils DPS, UTGL provinciale et BCZ exigent une province. La personne doit aussi avoir accès à l’application (menu Partager).</p></div>`:''}
  <div class="panel" style="margin-top:12px"><h3>Profils attribués (${ROLEDOCS.length})</h3>${ROLEDOCS.length?`<div class="tw"><table><thead><tr><th>Personne</th><th>Profil</th><th>Province</th><th>Attribué le</th>${r.adm?'<th></th>':''}</tr></thead><tbody>${ROLEDOCS.map(d=>`<tr><td>${esc(nm(d.id))}</td><td>${esc((ROLES[d.role]||{}).lab||d.role)}</td><td>${esc(d.prov||'National')}</td><td class="small">${esc((d.at||'').slice(0,16).replace('T',' '))}</td>${r.adm?`<td><button class="sm" data-delrole="${esc(d.id)}">Retirer</button></td>`:''}</tr>`).join('')}</tbody></table></div>`:'<p class="muted">Aucun profil attribué : les membres sans profil sont en lecture seule.</p>'}</div>
  <div class="panel" style="margin-top:12px"><h3>Journal d’audit <span class="small muted">300 dernières transactions</span></h3>${AUDIT.length?`<div class="tw" style="max-height:480px"><table><thead><tr><th>Date</th><th>Personne</th><th>Profil</th><th>Action</th><th>Objet</th><th>Détail</th></tr></thead><tbody>${AUDIT.map(a=>`<tr><td class="small mono">${esc((a.at||'').slice(0,19).replace('T',' '))}</td><td>${esc(a.uid?nm(a.uid):'—')}</td><td class="small">${esc((ROLES[a.role]||{}).lab||a.role||'')}${a.prov?' · '+esc(a.prov):''}</td><td>${esc(a.action)}</td><td class="small">${esc(a.target)}</td><td class="small">${esc(a.detail)}</td></tr>`).join('')}</tbody></table></div><div class="row" style="margin-top:8px"><button class="sm" data-act2="csvaudit">Exporter le journal (CSV)</button></div>`:'<p class="muted">Aucune transaction enregistrée pour l’instant.</p>'}</div>`};
@@ -1309,5 +1368,90 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-rep]
 
 </script>
 
+<script>
+// UTGL 5P · compte utilisateur, gestion des utilisateurs, sauvegardes
+(()=>{
+const H=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SITE=location.origin+location.pathname;
+const css=document.createElement('style');css.textContent=`
+#acctBtn{margin-left:6px}
+.mdl-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}
+.mdl{background:var(--card,#fff);color:inherit;border-radius:12px;max-width:420px;width:100%;padding:20px 20px 16px;box-shadow:0 20px 50px rgba(0,0,0,.3);max-height:92vh;overflow:auto}
+.mdl h3{margin:0 0 4px}.mdl .f{display:flex;flex-direction:column;gap:4px;margin-top:10px}.mdl input{width:100%;box-sizing:border-box}
+.mdl .tabs{display:flex;gap:6px;margin:12px 0 4px;flex-wrap:wrap}.mdl .tabs button.on{outline:2px solid var(--pri,#1d4ed8)}
+.mdl .msg{margin-top:10px;font-size:.9em}.mdl .row2{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}`;
+document.head.appendChild(css);
+// ---------- bouton de compte dans la barre supérieure ----------
+function chip(){if(!SB)return '';if(!ME)return `<button class="sm pri" id="acctBtn" data-acct="login">Se connecter</button>`;
+ const st=!ME.confirmed?' (adresse à confirmer)':!ME.active?' (en attente d’activation)':'';
+ return `<button class="sm" id="acctBtn" data-acct="me" title="${H(ME.email)}">${H(ME.name||ME.email)}${H(st)}</button>`}
+const _rt=renderTop;renderTop=()=>{_rt();const st=$('#dbState');if(st&&!$('#acctBtn'))st.insertAdjacentHTML('beforeend',' '+chip());
+ if(st&&!ME)st.querySelectorAll('.pill').forEach(p=>{if(/Mode consultation/.test(p.textContent))p.textContent='Démonstration en consultation'})};
+// ---------- fenêtres ----------
+function modal(html){close();const d=document.createElement('div');d.className='mdl-bg';d.id='mdl';d.innerHTML=`<div class="mdl" role="dialog" aria-modal="true">${html}</div>`;d.addEventListener('click',e=>{if(e.target===d)close()});document.body.appendChild(d);const i=d.querySelector('input');if(i)i.focus()}
+function close(){const d=$('#mdl');if(d)d.remove()}
+function msg(t,cls){const m=$('#mdlMsg');if(m)m.innerHTML=`<div class="note ${cls||''} small">${t}</div>`}
+const TABS=[['login','Connexion'],['signup','Créer un compte'],['forgot','Mot de passe oublié']];
+function loginUI(tab){tab=tab||'login';
+ const f={login:`<div class="f"><label for="aEm">Adresse électronique</label><input id="aEm" type="email" autocomplete="username"></div><div class="f"><label for="aPw">Mot de passe</label><input id="aPw" type="password" autocomplete="current-password"></div><div class="row2"><button data-acct="close">Annuler</button><button class="pri" data-acct="dologin">Se connecter</button></div>`,
+  signup:`<p class="small muted">Le compte donne accès aux données partagées après confirmation de l’adresse et activation par un administrateur (immédiate si votre adresse a été pré-autorisée).</p><div class="f"><label for="aNm">Nom et fonction</label><input id="aNm" autocomplete="name"></div><div class="f"><label for="aEm">Adresse électronique</label><input id="aEm" type="email" autocomplete="username"></div><div class="f"><label for="aPw">Mot de passe (10 caractères minimum)</label><input id="aPw" type="password" autocomplete="new-password"></div><div class="row2"><button data-acct="close">Annuler</button><button class="pri" data-acct="dosignup">Créer le compte</button></div>`,
+  forgot:`<div class="f"><label for="aEm">Adresse électronique du compte</label><input id="aEm" type="email" autocomplete="username"></div><div class="row2"><button data-acct="close">Annuler</button><button class="pri" data-acct="doforgot">Recevoir le lien</button></div>`}[tab];
+ modal(`<h3>Espace utilisateurs UTGL 5P</h3><p class="small muted">Sans connexion, l’application reste consultable en démonstration.</p><div class="tabs">${TABS.map(([k,l])=>`<button class="sm ${k===tab?'on':''}" data-acct="tab" data-t="${k}">${l}</button>`).join('')}</div>${f}<div id="mdlMsg" class="msg"></div>`)}
+function meUI(){const r=(ROLES[ME.role]||ROLES.LECT).lab;
+ modal(`<h3>Mon compte</h3><dl class="kv small"><dt>Adresse</dt><dd>${H(ME.email)}</dd><dt>Nom</dt><dd>${H(ME.name||'—')}</dd><dt>Profil</dt><dd>${H(r)}${ME.prov?' · '+H(ME.prov):''}</dd><dt>Statut</dt><dd>${!ME.confirmed?pill('Adresse non confirmée','warn'):ME.active?pill('Actif','ok'):pill('En attente d’activation par un administrateur','warn')}</dd></dl>
+ <div class="f"><label for="aPw">Nouveau mot de passe (facultatif)</label><input id="aPw" type="password" autocomplete="new-password"></div>
+ <div class="row2"><button data-acct="chpw">Changer le mot de passe</button><button data-acct="logout">Se déconnecter</button><button class="pri" data-acct="close">Fermer</button></div><div id="mdlMsg" class="msg"></div>`)}
+function recoveryUI(){modal(`<h3>Nouveau mot de passe</h3><div class="f"><label for="aPw">Nouveau mot de passe (10 caractères minimum)</label><input id="aPw" type="password" autocomplete="new-password"></div><div class="row2"><button class="pri" data-acct="chpw">Enregistrer</button></div><div id="mdlMsg" class="msg"></div>`)}
+const FR=m=>/Invalid login/i.test(m)?'Adresse ou mot de passe incorrect.':/Email not confirmed/i.test(m)?'Adresse non confirmée : ouvrez le lien reçu par courriel.':/already registered/i.test(m)?'Un compte existe déjà avec cette adresse : utilisez « Connexion » ou « Mot de passe oublié ».':/rate limit|security purposes/i.test(m)?'Trop de demandes : réessayez dans quelques minutes.':/Password should/i.test(m)?'Mot de passe trop faible (10 caractères minimum).':m;
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-acct]');if(!b)return;const a=b.dataset.acct;const v=id=>($('#'+id)||{}).value||'';
+ try{
+ if(a==='login')loginUI();else if(a==='me')meUI();else if(a==='close')close();else if(a==='tab')loginUI(b.dataset.t);
+ else if(a==='dologin'){b.disabled=true;const {error}=await SB.auth.signInWithPassword({email:v('aEm').trim(),password:v('aPw')});b.disabled=false;if(error)return msg(FR(error.message),'warn');msg('Connexion réussie. Chargement…','ok');location.reload()}
+ else if(a==='dosignup'){const pw=v('aPw');if(pw.length<10)return msg('Mot de passe trop court (10 caractères minimum).','warn');b.disabled=true;const {data,error}=await SB.auth.signUp({email:v('aEm').trim(),password:pw,options:{data:{name:v('aNm').trim()},emailRedirectTo:SITE}});b.disabled=false;if(error)return msg(FR(error.message),'warn');
+  msg(data.session?'Compte créé. Chargement…':'Compte créé. Un courriel de confirmation vient d’être envoyé : ouvrez le lien pour activer l’adresse, puis connectez-vous.','ok');if(data.session)location.reload()}
+ else if(a==='doforgot'){b.disabled=true;const {error}=await SB.auth.resetPasswordForEmail(v('aEm').trim(),{redirectTo:SITE});b.disabled=false;if(error)return msg(FR(error.message),'warn');msg('Si un compte existe pour cette adresse, un lien de réinitialisation vient d’être envoyé. Ouvrez-le dans ce même navigateur.','ok')}
+ else if(a==='chpw'){const pw=v('aPw');if(pw.length<10)return msg('Mot de passe trop court (10 caractères minimum).','warn');const {error}=await SB.auth.updateUser({password:pw});if(error)return msg(FR(error.message),'warn');msg('Mot de passe enregistré.','ok');if(typeof audit==='function')audit('Mot de passe modifié',ME.email,'')}
+ else if(a==='logout'){await SB.auth.signOut();location.reload()}
+ }catch(err){msg('Erreur : '+H(err.message||err),'warn')}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='Enter'&&$('#mdl')){const p=$('#mdl .row2 .pri');if(p&&e.target.tagName==='INPUT')p.click()}});
+RT_READY.then(()=>{render();if(RT_EVT==='recovery')recoveryUI();
+ if(ME&&ME.confirmed&&!ME.active&&!sessionStorage.getItem('p5pend')){try{sessionStorage.setItem('p5pend','1')}catch(_){}toast('Compte créé : en attente d’activation par un administrateur. Vous voyez la démonstration en attendant.')}});
+// ---------- administration : utilisateurs, invitations, sauvegardes ----------
+let USERS=[],INVITES=[],BK=null;
+async function loadAdm(){if(!ME||ME.role!=='ADMIN')return;try{const [u,i]=await Promise.all([SB.from('app_users').select('*').order('created_at'),SB.from('invites').select('*').order('at')]);USERS=u.data||[];INVITES=i.data||[];if(S.view==='admin')render()}catch(_){}}
+RT_READY.then(()=>{if(ME&&ME.role==='ADMIN'&&ME.active){loadAdm();SB.channel('adm').on('postgres_changes',{event:'*',schema:'public',table:'app_users'},loadAdm).subscribe()}});
+const roleOpts=sel=>Object.entries(ROLES).map(([k,x])=>`<option value="${k}" ${k===sel?'selected':''}>${H(x.lab)}</option>`).join('');
+const provOpts=sel=>'<option value="">(national)</option>'+D.TDR.map(p=>`<option ${p===sel?'selected':''}>${H(p)}</option>`).join('');
+const _adm=VIEWS.admin;VIEWS.admin=()=>{let h=_adm();if(!ME||ME.role!=='ADMIN'||!ME.active)return h;const d=x=>H(String(x||'').slice(0,16).replace('T',' '));
+ h+=`<div class="panel" style="margin-top:12px"><h3>Comptes utilisateurs (${USERS.length})</h3><p class="small muted">Chaque personne crée son compte depuis le bouton « Se connecter ». Un compte non pré-autorisé reste en attente : activez-le ici après avoir vérifié l’identité de la personne. La désactivation retire immédiatement l’accès aux données partagées.</p>
+ <div class="tw"><table><thead><tr><th>Adresse</th><th>Nom</th><th>Profil</th><th>Province</th><th>Statut</th><th>Créé le</th><th></th></tr></thead><tbody>${USERS.map(u=>`<tr><td class="small">${H(u.email)}</td><td class="small">${H(u.name)}</td><td><select data-uid="${H(u.id)}" data-uf="role" ${u.id===ME.id?'disabled':''}>${roleOpts(u.role)}</select></td><td><select data-uid="${H(u.id)}" data-uf="prov" ${u.id===ME.id?'disabled':''}>${provOpts(u.prov)}</select></td><td>${u.active?pill('Actif','ok'):pill('En attente / désactivé','warn')}</td><td class="small">${d(u.created_at)}</td><td>${u.id===ME.id?'<span class="small muted">vous</span>':`<button class="sm" data-adm="${u.active?'off':'on'}" data-id="${H(u.id)}">${u.active?'Désactiver':'Activer'}</button>`}</td></tr>`).join('')}</tbody></table></div></div>
+ <div class="panel" style="margin-top:12px"><h3>Pré-autoriser une adresse</h3><p class="small muted">La personne recevra le profil indiqué dès qu’elle aura créé son compte avec cette adresse et confirmé celle-ci. Aucun courriel n’est envoyé par l’application : communiquez-lui le lien du site.</p>
+ <div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end"><div class="f"><label for="ivEm">Adresse</label><input id="ivEm" type="email" style="min-width:220px"></div><div class="f"><label for="ivNm">Nom</label><input id="ivNm"></div><div class="f"><label for="ivRo">Profil</label><select id="ivRo">${roleOpts('LECT')}</select></div><div class="f"><label for="ivPr">Province</label><select id="ivPr">${provOpts('')}</select></div><button class="pri" data-adm="invite">Pré-autoriser</button></div>
+ ${INVITES.length?`<div class="tw" style="margin-top:10px"><table><thead><tr><th>Adresse</th><th>Nom</th><th>Profil</th><th>Province</th><th>Compte créé</th><th></th></tr></thead><tbody>${INVITES.map(i=>`<tr><td class="small">${H(i.email)}</td><td class="small">${H(i.name)}</td><td class="small">${H((ROLES[i.role]||{}).lab||i.role)}</td><td class="small">${H(i.prov||'National')}</td><td>${USERS.some(u=>u.email.toLowerCase()===i.email.toLowerCase())?pill('Oui','ok'):pill('Pas encore','nd')}</td><td><button class="sm" data-adm="uninvite" data-id="${H(i.email)}">Retirer</button></td></tr>`).join('')}</tbody></table></div>`:''}</div>
+ <div class="panel" style="margin-top:12px"><h3>Sauvegardes des données</h3><ul class="small" style="line-height:1.6"><li><b>Automatique</b> : copie quotidienne de la base dans un dépôt privé (historique daté, restaurable).</li><li><b>Manuelle</b> : téléchargez une copie complète (imports, CAPA, rapports, configuration, journal, comptes) avant toute opération importante.</li></ul>
+ <div class="row" style="gap:8px;flex-wrap:wrap"><button class="pri" data-adm="backup">Télécharger une sauvegarde (JSON)</button><label class="btn sm" style="cursor:pointer"><input type="file" id="bkFile" accept=".json,application/json" style="display:none">Restaurer depuis un fichier…</label></div>
+ ${BK?`<div class="note warn small" style="margin-top:10px">Fichier « ${H(BK.name)} » du ${H((BK.j.at||'').slice(0,16).replace('T',' '))} : ${BK.j.docs.length} document(s). La restauration réécrit ces documents (les documents absents du fichier ne sont pas supprimés) et l’opération est journalisée. <div class="row" style="gap:8px;margin-top:8px"><button class="sm" data-adm="bkcancel">Annuler</button><button class="sm pri" data-adm="restore">Confirmer la restauration</button></div></div>`:''}<div id="bkMsg" class="small" style="margin-top:8px"></div></div>`;
+ return h.replace('La personne doit aussi avoir accès à l’application (menu Partager).','La personne doit d’abord avoir créé son compte (ou avoir été pré-autorisée ci-dessous).')};
+async function allDocs(){const out=[];let from=0;for(;;){const r=await SB.from('docs').select('col,id,data,updated_at,updated_by').order('col').order('id').range(from,from+999);if(r.error)throw r.error;out.push(...r.data);if(r.data.length<1000)break;from+=1000}return out}
+document.addEventListener('change',async e=>{const t=e.target;
+ if(t.dataset&&t.dataset.uid){const p={[t.dataset.uf]:t.value,updated_at:new Date().toISOString(),updated_by:ME.id};if(t.dataset.uf==='role'&&ROLES[t.value].scope!=='prov')p.prov='';
+  if(t.dataset.uf==='role'&&ROLES[t.value].scope==='prov'){const u=USERS.find(x=>x.id===t.dataset.uid);if(!u||!u.prov){toast('Choisissez d’abord la province, puis le profil');loadAdm();return}}
+  const r=await SB.from('app_users').update(p).eq('id',t.dataset.uid);if(r.error)toast('Échec : '+r.error.message);else{toast('Profil mis à jour');audit('Profil modifié',t.dataset.uid,t.dataset.uf+' = '+t.value)}loadAdm()}
+ else if(t.id==='bkFile'&&t.files[0]){const f=t.files[0];try{const j=JSON.parse(await f.text());if(!j||!Array.isArray(j.docs))throw new Error('format');BK={name:f.name,j};render()}catch(_){toast('Fichier de sauvegarde non reconnu')}}});
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-adm]');if(!b)return;const a=b.dataset.adm;
+ try{
+ if(a==='on'||a==='off'){const r=await SB.from('app_users').update({active:a==='on',updated_at:new Date().toISOString(),updated_by:ME.id}).eq('id',b.dataset.id);if(r.error)throw r.error;audit(a==='on'?'Compte activé':'Compte désactivé',b.dataset.id,'');toast(a==='on'?'Compte activé':'Compte désactivé');loadAdm()}
+ else if(a==='invite'){const em=$('#ivEm').value.trim().toLowerCase(),ro=$('#ivRo').value,pr=$('#ivPr').value;if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return toast('Adresse invalide');if(ROLES[ro].scope==='prov'&&!pr)return toast('Ce profil exige une province');
+  const r=await SB.from('invites').upsert({email:em,name:$('#ivNm').value.trim(),role:ro,prov:ROLES[ro].scope==='prov'?pr:'',invited_by:ME.id,at:new Date().toISOString()});if(r.error)throw r.error;audit('Adresse pré-autorisée',em,ro+(pr?' · '+pr:''));toast('Adresse pré-autorisée');loadAdm()}
+ else if(a==='uninvite'){const r=await SB.from('invites').delete().eq('email',b.dataset.id);if(r.error)throw r.error;audit('Pré-autorisation retirée',b.dataset.id,'');loadAdm()}
+ else if(a==='backup'){b.disabled=true;$('#bkMsg').textContent='Préparation de la sauvegarde…';const [docs,u,i]=await Promise.all([allDocs(),SB.from('app_users').select('*'),SB.from('invites').select('*')]);
+  const j={app:'UTGL 5P',version:1,at:new Date().toISOString(),by:ME.email,docs,users:u.data||[],invites:i.data||[]};const n='Sauvegarde_UTGL5P_'+j.at.slice(0,16).replace(/[:T]/g,'-')+'.json';
+  await saveFile(n,JSON.stringify(j),'application/json');audit('Sauvegarde téléchargée',n,docs.length+' documents');$('#bkMsg').textContent=docs.length+' document(s) sauvegardé(s) dans '+n;b.disabled=false}
+ else if(a==='bkcancel'){BK=null;render()}
+ else if(a==='restore'){if(!BK)return;b.disabled=true;const L=BK.j.docs.filter(d=>d&&d.col&&d.id&&d.col!=='audit');let n=0;for(let k=0;k<L.length;k+=50){const r=await SB.from('docs').upsert(L.slice(k,k+50).map(d=>({col:d.col,id:d.id,data:d.data})),{onConflict:'col,id'});if(r.error)throw r.error;n+=Math.min(50,L.length-k);const m=$('#bkMsg');if(m)m.textContent=n+' / '+L.length+' documents restaurés'}
+  audit('Restauration de sauvegarde',BK.name,n+' documents');toast('Restauration terminée : '+n+' document(s)');BK=null;render()}
+ }catch(err){toast('Échec : '+(err.message||err));b.disabled=false}});
+})();
+</script>
 </body>
 </html>
