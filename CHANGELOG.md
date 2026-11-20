@@ -1,5 +1,10 @@
 # Historique des versions – UTGL 5P
 
+## v1.2.3 – 20 novembre 2026 (retours de l'UTGL)
+- Exhaustivité du BCZ intégrée au score du pilier 1 (méthode corrigée) ; la méthode V8.2 stricte reste fidèle au classeur.
+- Validation des données de la province par l'UTGL provinciale (la DPS conserve la possibilité de valider) ; messages et guide mis à jour.
+- Page de connexion au démarrage : la session est limitée à la fenêtre ouverte ; chaque nouveau lancement de l'application commence par la connexion. Les liens reçus par courriel (confirmation, mot de passe oublié) restent fonctionnels.
+
 ## v1.2.2 – 20 novembre 2026
 - Imports INFOMED (472 documents, 26 provinces) transférés dans la base de la version web, avec contrôle d'intégrité.
 - Chargement accéléré : un seul téléchargement partagé des imports, au lieu de deux.
