@@ -8,6 +8,7 @@
 - Export Excel des produits traceurs (Décisions DPS, Bulletin & alertes), par province.
 - Paramètres des cibles : versions datées des cibles (manuel SIGL ou décision), applicables à partir d'une date d'effet, sans effet rétroactif.
 - Administration : signalement des doublons possibles parmi les comptes.
+- Application installable (ordinateur, tablette, téléphone) : icône « UTGL 5P » sur le bureau, ouverture dans sa propre fenêtre.
 
 ## v1.1.0 – 20 novembre 2026
 - Authentification des utilisateurs (adresse électronique et mot de passe, confirmation de l'adresse, réinitialisation du mot de passe).

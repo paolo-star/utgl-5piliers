@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="UTGL 5P – pilotage logistique intégré des 5 Piliers (RDC)">
 <link rel="icon" href="favicon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b2a5b">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="UTGL 5P">
 </head>
 <body>
 <script src="vendor/supabase.js"></script>
@@ -1558,7 +1562,7 @@ const st=document.createElement('style');st.textContent=`
 document.head.appendChild(st);
 let G=null,TAB='login';
 function shell(inner){if(!G){G=document.createElement('div');G.id='gate';G.setAttribute('role','dialog');G.setAttribute('aria-modal','true');document.body.appendChild(G)}
- G.innerHTML=`<div class="gc"><div class="gh"><img src="favicon.png" alt=""><div><h1>UTGL 5P · Pilotage logistique intégré</h1><p class="sub">Application des 5 Piliers – accès réservé aux utilisateurs autorisés</p></div></div>${inner}<div class="foot">Ministère de la Santé Publique, Hygiène et Prévoyance Sociale · ANAMED · JPN Management Consulting</div></div>`;
+ G.innerHTML=`<div class="gc"><div class="gh"><img src="favicon.png" alt=""><div><h1>UTGL 5P · Pilotage logistique intégré</h1><p class="sub">Application des 5 Piliers – accès réservé aux utilisateurs autorisés</p></div></div>${inner}<div style="text-align:center;margin-top:12px"><button class="lnk" data-g="install" style="display:${INST?'inline':'none'}">Installer l’application sur cet appareil (icône sur le bureau)</button></div><div class="foot">Ministère de la Santé Publique, Hygiène et Prévoyance Sociale · ANAMED · JPN Management Consulting</div></div>`;
  const f=G.querySelector('input');if(f)setTimeout(()=>f.focus(),30)}
 const msg=(t,c)=>{const m=G&&G.querySelector('.msg');if(m){m.className='msg '+(c||'ok');m.innerHTML=t}};
 const FR=m=>/Invalid login/i.test(m)?'Adresse ou mot de passe incorrect. Si vous venez de créer votre compte, confirmez d’abord votre adresse avec le lien reçu par courriel.':/Email not confirmed/i.test(m)?'Adresse non confirmée : ouvrez le lien reçu par courriel (pensez au dossier Spam).':/already registered|already exists/i.test(m)?'Un compte existe déjà avec cette adresse : utilisez « Connexion » ou « Mot de passe oublié ».':/rate limit|security purposes/i.test(m)?'Trop de demandes : réessayez dans quelques minutes.':/Password should|weak/i.test(m)?'Mot de passe trop faible (10 caractères minimum).':/valid email|invalid format/i.test(m)?'Adresse électronique invalide.':H(m);
@@ -1606,6 +1610,11 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-g]')
  }catch(err){b.disabled=false;msg('Erreur : '+H(err.message||err),'bad')}});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&G&&e.target.tagName==='INPUT'){const p=G.querySelector('.act .p');if(p)p.click()}});
 window.GATE={logout:async()=>{await SB.auth.signOut();location.replace(SITE)}};
+// installation sur l'ordinateur ou le téléphone (icône sur le bureau)
+let INST=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();INST=e;const b=G&&G.querySelector('[data-g=install]');if(b)b.style.display='inline'});
+window.addEventListener('appinstalled',()=>{INST=null});
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-g=install]');if(!b||!INST)return;INST.prompt();try{await INST.userChoice}catch(_){}INST=null;b.style.display='none'});
 loadingView('Vérification de la session…');RT_READY.then(route);
 })();
 </script>
