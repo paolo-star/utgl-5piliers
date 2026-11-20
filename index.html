@@ -17,7 +17,7 @@ try{SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{flowType:'pkce',persist
 var RT_READY=(async()=>{if(!SB)return;
  try{SB.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')RT_EVT='recovery'});
   const {data:{session}}=await SB.auth.getSession();
-  if(/[?&]code=/.test(location.search)){history.replaceState(null,'',location.pathname+location.hash)}
+  if(/[?&#](code|error|error_code|error_description)=/.test(location.search+location.hash)){const e=new URLSearchParams((location.search+'&'+location.hash.slice(1)).replace(/^\?/,''));RT_EVT=RT_EVT||(e.get('error_description')?'linkerr':null);history.replaceState(null,'',location.pathname)}
   if(!session)return;const u=session.user;
   const {data}=await SB.from('app_users').select('*').eq('id',u.id).maybeSingle();
   ME=Object.assign({email:u.email,name:'',role:'LECT',prov:'',active:false},data||{},{id:u.id,confirmed:!!u.email_confirmed_at})}catch(e){console.warn(e)}})();
@@ -1406,15 +1406,15 @@ const FR=m=>/Invalid login/i.test(m)?'Adresse ou mot de passe incorrect.':/Email
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-acct]');if(!b)return;const a=b.dataset.acct;const v=id=>($('#'+id)||{}).value||'';
  try{
  if(a==='login')loginUI();else if(a==='me')meUI();else if(a==='close')close();else if(a==='tab')loginUI(b.dataset.t);
- else if(a==='dologin'){b.disabled=true;const {error}=await SB.auth.signInWithPassword({email:v('aEm').trim(),password:v('aPw')});b.disabled=false;if(error)return msg(FR(error.message),'warn');msg('Connexion réussie. Chargement…','ok');location.reload()}
+ else if(a==='dologin'){b.disabled=true;const {error}=await SB.auth.signInWithPassword({email:v('aEm').trim(),password:v('aPw')});b.disabled=false;if(error)return msg(FR(error.message),'warn');msg('Connexion réussie. Chargement…','ok');location.replace(SITE)}
  else if(a==='dosignup'){const pw=v('aPw');if(pw.length<10)return msg('Mot de passe trop court (10 caractères minimum).','warn');b.disabled=true;const {data,error}=await SB.auth.signUp({email:v('aEm').trim(),password:pw,options:{data:{name:v('aNm').trim()},emailRedirectTo:SITE}});b.disabled=false;if(error)return msg(FR(error.message),'warn');
-  msg(data.session?'Compte créé. Chargement…':'Compte créé. Un courriel de confirmation vient d’être envoyé : ouvrez le lien pour activer l’adresse, puis connectez-vous.','ok');if(data.session)location.reload()}
+  msg(data.session?'Compte créé. Chargement…':'Compte créé. Un courriel de confirmation vient d’être envoyé : ouvrez le lien pour activer l’adresse, puis connectez-vous.','ok');if(data.session)location.replace(SITE)}
  else if(a==='doforgot'){b.disabled=true;const {error}=await SB.auth.resetPasswordForEmail(v('aEm').trim(),{redirectTo:SITE});b.disabled=false;if(error)return msg(FR(error.message),'warn');msg('Si un compte existe pour cette adresse, un lien de réinitialisation vient d’être envoyé. Ouvrez-le dans ce même navigateur.','ok')}
  else if(a==='chpw'){const pw=v('aPw');if(pw.length<10)return msg('Mot de passe trop court (10 caractères minimum).','warn');const {error}=await SB.auth.updateUser({password:pw});if(error)return msg(FR(error.message),'warn');msg('Mot de passe enregistré.','ok');if(typeof audit==='function')audit('Mot de passe modifié',ME.email,'')}
- else if(a==='logout'){await SB.auth.signOut();location.reload()}
+ else if(a==='logout'){await SB.auth.signOut();location.replace(SITE)}
  }catch(err){msg('Erreur : '+H(err.message||err),'warn')}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='Enter'&&$('#mdl')){const p=$('#mdl .row2 .pri');if(p&&e.target.tagName==='INPUT')p.click()}});
-RT_READY.then(()=>{render();if(RT_EVT==='recovery')recoveryUI();
+RT_READY.then(()=>{render();if(RT_EVT==='recovery')recoveryUI();else if(RT_EVT==='linkerr'&&!ME)toast('Ce lien de courriel a expiré ou a déjà été utilisé : connectez-vous avec votre mot de passe ou demandez un nouveau lien.');
  if(ME&&ME.confirmed&&!ME.active&&!sessionStorage.getItem('p5pend')){try{sessionStorage.setItem('p5pend','1')}catch(_){}toast('Compte créé : en attente d’activation par un administrateur. Vous voyez la démonstration en attendant.')}});
 // ---------- administration : utilisateurs, invitations, sauvegardes ----------
 let USERS=[],INVITES=[],BK=null;
