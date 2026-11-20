@@ -37,6 +37,7 @@ var RT=(()=>{
   const ch=SB.channel('w'+rid()).on('postgres_changes',Object.assign({event:'*',schema:'public',table},filter?{filter}:{}),run).subscribe();
   const iv=setInterval(refresh,300000);const vis=()=>{if(document.visibilityState==='visible')run()};document.addEventListener('visibilitychange',vis);
   return ()=>{clearTimeout(t);clearInterval(iv);document.removeEventListener('visibilitychange',vis);SB.removeChannel(ch)}}
+ const SHARED={};
  const snapOf=rows=>({docs:rows.map(r=>({id:r.id,exists:true,data:()=>r.data})),size:rows.length,empty:!rows.length});
  class Doc{constructor(c,i){this.c=c;this.i=i;this.id=i}
   async set(obj){if(this.c==='roles'){ok(await SB.from('app_users').update({role:obj.role,prov:obj.prov||'',active:true,updated_at:new Date().toISOString(),updated_by:ME.id}).eq('id',this.i));return}
@@ -61,8 +62,17 @@ var RT=(()=>{
     const r=ok(await q);out=out.concat(r.data);if(r.data.length<n||(this.o.lim&&out.length>=this.o.lim))break;from+=n}
    return out}
   async get(){return snapOf(await this.rows())}
-  onSnapshot(cb,err){const f=()=>this.rows().then(r=>cb(snapOf(r)),e=>err&&err(e));f();
-   return this.c==='roles'?watch('app_users',null,f):watch('docs','col=eq.'+this.c,f)}}
+  onSnapshot(cb,err){if(this.c==='roles'){const f=()=>this.rows().then(r=>cb(snapOf(r)),e=>err&&err(e));f();return watch('app_users',null,f)}
+   // un seul téléchargement partagé par collection et par requête, quel que soit le nombre d'abonnés
+   const k=this.c+'|'+JSON.stringify(this.o);let s=SHARED[k];
+   if(!s){s=SHARED[k]={subs:new Set(),last:null,busy:null,again:false};
+    const f=()=>{if(s.busy){s.again=true;return}
+     s.busy=this.rows().then(r=>{s.last=snapOf(r);s.subs.forEach(x=>{try{x.cb(s.last)}catch(e){console.warn(e)}})},e=>s.subs.forEach(x=>x.err&&x.err(e)))
+      .finally(()=>{s.busy=null;if(s.again){s.again=false;f()}})};
+    s.stop=watch('docs','col=eq.'+this.c,f);f()}
+   else if(s.last){const l=s.last;setTimeout(()=>cb(l),0)}
+   const me={cb,err};s.subs.add(me);
+   return ()=>{s.subs.delete(me);if(!s.subs.size&&SHARED[k]===s){s.stop();delete SHARED[k]}}}}
  const DBAPI={collection:c=>new Col(c),doc:p=>{const k=p.indexOf('/');return new Doc(p.slice(0,k),p.slice(k+1))}};
  const USERAPI={id:async()=>ME.id,isOwner:()=>ME.role==='ADMIN',canEdit:()=>ME.role==='ADMIN',can:n=>n==='data.write'?ME.role!=='LECT':ME.role==='ADMIN',
   me:async()=>({id:ME.id,name:ME.name||ME.email}),
