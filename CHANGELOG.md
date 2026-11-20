@@ -4,6 +4,7 @@
 - Imports INFOMED (472 documents, 26 provinces) transférés dans la base de la version web, avec contrôle d'intégrité.
 - Chargement accéléré : un seul téléchargement partagé des imports, au lieu de deux.
 - Connecteur INFOMED › « Couverture des données » : mois importés par province, série et année (P1, disponibilité, DISMED, stock par BCZ).
+- Données INFOMED complétées (extraction du 20/11/2026, 332 documents) : disponibilité 2024, 2025 et 2026 ; DISMED aux CDR 2026 ; complétude et exhaustivité 2024-2025 ; octobre 2026 actualisé. Contrôle d'intégrité après chargement (liste des documents et somme des valeurs identiques).
 - Rapports GTM : avertissement à l'écran et ligne dans la page de traçabilité (PDF, PPTX) lorsque les données INFOMED de la période sont incomplètes.
 
 ## v1.2.0 – 20 novembre 2026
