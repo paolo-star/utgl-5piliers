@@ -1,5 +1,9 @@
 # Historique des versions – UTGL 5P
 
+## v1.3.1 – 21 novembre 2026 (menu par catégories)
+- Menu latéral regroupé en six catégories repliables : Tableaux de bord par niveau, Performance & décisions, Données & validation, Paramétrage & administration, Aide & formation (le Portail reste en accès direct). Seuls les grands titres s'affichent ; un clic sur une catégorie déplie ses écrans, la catégorie de l'écran ouvert est dépliée d'office. Sur téléphone, la liste des écrans est groupée par catégorie.
+- Les titres des écrans (bandeau supérieur) reprennent les nouvelles catégories. Les droits par profil sont inchangés.
+
 ## v1.3.0 – 21 novembre 2026 (recommandations de l'évaluation, priorité P0)
 - Justification de chaque score : un clic sur une valeur du suivi mensuel des KPI affiche la période, la source retenue et la règle appliquée (INFOMED, Compile ou classeur V8.2), le lot d'import (identifiant, date, auteur, statut), les rapports reçus et attendus, la formule, le seuil, la version du référentiel des cibles et l'état de la période ; distinction entre zéro déclaré, donnée manquante et non applicable.
 - Clôture des périodes (Outils › Clôture des périodes) : brouillon → soumis (UTGL provinciale) → validé (DPS) → publié (UTGL centrale), renvoi « à corriger » motivé. Séparation des tâches (celui qui soumet ne valide pas ; celui qui valide ne publie pas). Une période soumise verrouille les imports de ses mois ; une période publiée fige les chiffres provinciaux (tableaux de bord, rapports GTM, export COPIL), avec numéro de version et empreinte SHA-256. Toute correction après publication passe par une réouverture motivée qui archive la version précédente. Règles appliquées par le serveur.
