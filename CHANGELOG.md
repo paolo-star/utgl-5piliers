@@ -3,6 +3,8 @@
 ## v1.3.1 – 21 novembre 2026 (menu par catégories)
 - Menu latéral regroupé en six catégories repliables : Tableaux de bord par niveau, Performance & décisions, Données & validation, Paramétrage & administration, Aide & formation (le Portail reste en accès direct). Seuls les grands titres s'affichent ; un clic sur une catégorie déplie ses écrans, la catégorie de l'écran ouvert est dépliée d'office. Sur téléphone, la liste des écrans est groupée par catégorie.
 - Les titres des écrans (bandeau supérieur) reprennent les nouvelles catégories. Les droits par profil sont inchangés.
+- Nouvel écran Aide & formation › Manuel d’utilisation : version en vigueur du manuel (1.3.1 du 21 novembre 2026), nouveautés, sommaire, téléchargement au format Word ; renvoi depuis le Guide & procédure.
+- Correction : la justification d’un score (clic sur une valeur du suivi mensuel des KPI, version 1.3.0) n’était pas active depuis les onglets P1 à P5 ; elle l’est désormais.
 
 ## v1.3.0 – 21 novembre 2026 (recommandations de l'évaluation, priorité P0)
 - Justification de chaque score : un clic sur une valeur du suivi mensuel des KPI affiche la période, la source retenue et la règle appliquée (INFOMED, Compile ou classeur V8.2), le lot d'import (identifiant, date, auteur, statut), les rapports reçus et attendus, la formule, le seuil, la version du référentiel des cibles et l'état de la période ; distinction entre zéro déclaré, donnée manquante et non applicable.

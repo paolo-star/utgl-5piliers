@@ -1595,7 +1595,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-just]');if
  const cp=e.target.closest('[data-jcapa]');if(cp){const [c,p,y,m]=cp.dataset.jcapa.split('|');justClose();S.view='capa';S.capaPre={code:c,prov:p,year:+y,month:+m};render();toast('Registre CAPA : utilisez « Proposer les CAPA » pour '+kName(c)+' ('+p+')')}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')justClose()});
 // cellules du suivi mensuel des KPI (écran KPI, périmètre provincial) rendues cliquables
-(()=>{const _k=VIEWS.kpi;VIEWS.kpi=()=>{let h=_k();if(S.kpiScope==='nat'||!S.prov)return h;const tab=S.kpiTab||'';if(!/^P[1-5]$/.test(tab))return h;
+(()=>{const _k=VIEWS.kpi;VIEWS.kpi=()=>{let h=_k();if(S.kpiScope==='nat'||!S.prov)return h;const tab=String(S.kpiTab||'').toUpperCase();if(!/^P[1-5]$/.test(tab))return h;
  const p=+tab.slice(1);const codes=CODES.filter(c=>KPI[c].pil===p);const months=MOIS.map((x,i)=>i+1).filter(m=>true);
  // repère chaque ligne du tableau « Suivi mensuel » par son indicateur et chaque cellule par son mois
  const i=h.indexOf('<h3>Suivi mensuel des KPI');if(i<0)return h;const j=h.indexOf('</table>',i);let seg=h.slice(i,j);let ci=0;
@@ -1690,6 +1690,22 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-recx
 (()=>{const _a=audit;audit=async function(action,target,detail,extra){if(!DB)return;try{await DB.collection('audit').add(Object.assign({at:new Date().toISOString(),uid:MYID||'',role:MYROLE.role,prov:MYROLE.prov||'',action,target:String(target||'').slice(0,200),detail:String(detail||'').slice(0,500)},extra?{provCible:String(extra.provCible||'').slice(0,60),periode:String(extra.periode||'').slice(0,30),motif:String(extra.motif||'').slice(0,500)}:{}))}catch(e){}}})();
 (()=>{const _s=setImportStatus;setImportStatus=async(id,st)=>{const d=IMPDOCS.find(x=>x.id===id);const r=await _s(id,st);if(d)audit('Statut d’import : '+st,id,d.type+' · '+d.prov,{provCible:d.prov,periode:d.year+'-'+String(d.month||0).padStart(2,'0')});return r}})();
 
+// ---------------- MANUEL D'UTILISATION (Aide & formation) · v1.3.1 ----------------
+// Version en vigueur du manuel : à mettre à jour à chaque nouvelle version (fichier Word partagé par lien).
+const MANUEL={version:'1.3.1',date:'21 novembre 2026',app:'1.3.1',pages:65,taille:'2,8 Mo',id:'18EuDpZKWk6hMOpQD-pmlBCuJrAC_1NS-',
+ nouv:['Menu par catégories repliables (section 2.2.1) et nouveaux chemins d’accès des procédures','Clôture des périodes : soumission par l’UTGL provinciale, validation par la DPS, publication par l’UTGL centrale, réouverture motivée (sections 4.9, 5.22 et 6.16)','Justification de chaque score depuis le suivi mensuel des KPI (sections 4.10 et 6.17)','Bilan de rapprochement des sources avant validation (Connecteur INFOMED › Rapprochement)','Produits en rupture dans les structures sanitaires dans l’écran Décisions DPS','Toutes les captures d’écran refaites sur la version 1.3.1'],
+ som:[['1','Présentation de l’application'],['2','Prise en main : accès, organisation de l’écran, menu par catégories, filtres, téléphone, mon compte'],['3','Profils et droits d’accès, dont les droits de clôture des périodes'],['4','Lire les résultats : statuts, scores, méthodes, état d’une période, justification'],['5','Les écrans, un par un (22 écrans)'],['6','Procédures pas à pas (17 procédures)'],['7','Bonnes pratiques et sécurité'],['8','Limites connues de la version actuelle'],['9','Dépannage – questions fréquentes'],['10','Glossaire'],['A–C','Annexes : référentiel des 71 KPI, structures INFOMED par province, normes de réapprovisionnement']]};
+NAV.find(g=>g[0]==='Outils')[1].push(['manuel','Manuel d’utilisation','']);
+(()=>{const _g=VIEWS.guide;VIEWS.guide=()=>{const h=_g();const k='<div class="row"></div></div>';const i=h.indexOf(k);const n=`<div class="note small">Le <b>manuel d’utilisation complet</b> (version ${esc(MANUEL.version)} du ${esc(MANUEL.date)}, format Word) est disponible dans <a href="#manuel">Aide & formation › Manuel d’utilisation</a>.</div>`;return i<0?n+h:h.slice(0,i+k.length)+n+h.slice(i+k.length)}})();
+const BTNA='display:inline-block;border:1px solid var(--line);border-radius:7px;padding:6px 11px;font-weight:600;text-decoration:none;';
+VIEWS.manuel=()=>{const dl='https://drive.google.com/uc?export=download&id='+MANUEL.id,vw='https://drive.google.com/file/d/'+MANUEL.id+'/view';
+ return hdr('Aide & formation','Manuel d’utilisation','Version en vigueur du manuel de l’application 5 Piliers, à télécharger au format Word.')+
+ `<div class="grid g2"><div class="panel"><h3>Manuel d’utilisation · version ${esc(MANUEL.version)}</h3><dl class="kv small"><dt>Date</dt><dd>${esc(MANUEL.date)}</dd><dt>Application décrite</dt><dd>version ${esc(MANUEL.app)} en ligne</dd><dt>Format</dt><dd>Word (.docx) · ${MANUEL.pages} pages · ${esc(MANUEL.taille)}</dd><dt>Rédaction</dt><dd>JPN Management Consulting</dd><dt>Statut</dt><dd>Projet soumis à la relecture de l’UTGL centrale et de l’ANAMED</dd></dl>
+ <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><a href="${dl}" target="_blank" rel="noopener" style="${BTNA}background:var(--navy);border-color:var(--navy);color:#fff">Télécharger le manuel (Word)</a><a href="${vw}" target="_blank" rel="noopener" style="${BTNA}background:var(--panel);color:inherit">Ouvrir dans le navigateur</a></div>
+ <p class="small muted" style="margin-top:10px">Le fichier est hébergé sur Google Drive (lien en lecture seule). Si le sommaire est vide à l’ouverture dans Word : clic droit sur le sommaire › « Mettre à jour les champs ». Les captures d’écran utilisent des comptes de test et des données non validées : les chiffres visibles ne sont pas des résultats officiels.</p></div>
+ <div class="panel"><h3>Nouveautés de cette version</h3><ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">${MANUEL.nouv.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div>
+ <div class="panel"><h3>Sommaire</h3><div class="tw"><table class="small"><thead><tr><th>Chapitre</th><th>Contenu</th></tr></thead><tbody>${MANUEL.som.map(([n,t])=>`<tr><td>${esc(n)}</td><td>${esc(t)}</td></tr>`).join('')}</tbody></table></div>
+ <p class="small muted" style="margin-top:8px">Voir aussi : <a href="#guide">Guide & procédure mensuelle</a> (rappel intégré) et <a href="#formation">Modules de formation</a> (vidéos).</p></div>`};
 // ---------------- MENU PAR CATÉGORIES (v1.3.1) ----------------
 // Le menu latéral n'affiche que les grandes catégories ; un clic sur une catégorie déplie ses écrans (accordéon : une catégorie ouverte à la fois).
 // La catégorie de l'écran affiché est ouverte d'office. Les droits par profil (écrans masqués) restent appliqués par renderNav.
@@ -1699,7 +1715,7 @@ const NAVCAT=[
  ['Performance & décisions',['kpi','rapports','bulletin','reappro','capa']],
  ['Données & validation',['infomed','extract','form','periodes']],
  ['Paramétrage & administration',['ref','cibles','admin']],
- ['Aide & formation',['guide','formation']]];
+ ['Aide & formation',['manuel','guide','formation']]];
 (()=>{const all=new Map();NAV.forEach(([,items])=>items.forEach(it=>all.set(it[0],it)));const used=new Set();
  const out=NAVCAT.map(([g,ks])=>[g,ks.filter(k=>all.has(k)).map(k=>(used.add(k),all.get(k)))]).filter(g=>g[1].length);
  const rest=[...all.keys()].filter(k=>!used.has(k));if(rest.length)out.push(['Autres écrans',rest.map(k=>all.get(k))]);
