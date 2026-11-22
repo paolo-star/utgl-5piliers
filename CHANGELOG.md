@@ -1,5 +1,11 @@
 # Historique des versions – UTGL 5P
 
+## v1.4.0 – 22 novembre 2026 (alertes de stock et registre)
+- Détection automatique des alertes de stock après chaque import mensuel (et à l’ouverture de session des profils autorisés) : rupture et surstock dans les ESS par BCZ et par programme, redistribution proposée d’abord entre ESS d’un même BCZ puis entre BCZ de la même province, stock du CDR sous le minimum ou au-dessus du maximum (normes de réapprovisionnement). Seuils par défaut : rupture ≥ 50 %, surstock ≥ 20 % ; Cancer et COVID-19 non suivis ; à valider par l’ANAMED et l’UTGL.
+- Courriel récapitulatif par province aux comptes actifs BCZ, DPS et UTGL provinciale (nouvelle fonction serveur notifier-alertes, même messagerie que le courriel d’activation) ; aucun numéro de téléphone collecté.
+- Nouvel écran Performance & décisions › Registre des alertes : filtres, accusé de lecture, suite donnée (action, commentaire, statut), clôture motivée réservée à la DPS et aux UTGL, CAPA créée et liée à l’alerte, historique complet, export Excel (registre et historique).
+- Serveur (schema_v14.sql) : droits d’écriture de la collection « alertes », garde-fou interdisant la suppression d’une alerte, la modification de son constat ou de son historique, la clôture sans commentaire et la réouverture hors UTGL centrale.
+
 ## v1.3.1 – 21 novembre 2026 (menu par catégories)
 - Menu latéral regroupé en six catégories repliables : Tableaux de bord par niveau, Performance & décisions, Données & validation, Paramétrage & administration, Aide & formation (le Portail reste en accès direct). Seuls les grands titres s'affichent ; un clic sur une catégorie déplie ses écrans, la catégorie de l'écran ouvert est dépliée d'office. Sur téléphone, la liste des écrans est groupée par catégorie.
 - Les titres des écrans (bandeau supérieur) reprennent les nouvelles catégories. Les droits par profil sont inchangés.
