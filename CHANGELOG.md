@@ -5,6 +5,7 @@
 - Courriel récapitulatif par province aux comptes actifs BCZ, DPS et UTGL provinciale (nouvelle fonction serveur notifier-alertes, même messagerie que le courriel d’activation) ; aucun numéro de téléphone collecté.
 - Nouvel écran Performance & décisions › Registre des alertes : filtres, accusé de lecture, suite donnée (action, commentaire, statut), clôture motivée réservée à la DPS et aux UTGL, CAPA créée et liée à l’alerte, historique complet, export Excel (registre et historique).
 - Serveur (schema_v14.sql) : droits d’écriture de la collection « alertes », garde-fou interdisant la suppression d’une alerte, la modification de son constat ou de son historique, la clôture sans commentaire et la réouverture hors UTGL centrale.
+- Manuel d’utilisation 1.4.0 (22 novembre 2026) : règles des alertes de stock, écran Registre des alertes, procédure « Traiter une alerte », calendrier et limites mis à jour ; accessible depuis Aide & formation › Manuel d’utilisation.
 
 ## v1.3.1 – 21 novembre 2026 (menu par catégories)
 - Menu latéral regroupé en six catégories repliables : Tableaux de bord par niveau, Performance & décisions, Données & validation, Paramétrage & administration, Aide & formation (le Portail reste en accès direct). Seuls les grands titres s'affichent ; un clic sur une catégorie déplie ses écrans, la catégorie de l'écran ouvert est dépliée d'office. Sur téléphone, la liste des écrans est groupée par catégorie.
