@@ -1,5 +1,8 @@
 # Historique des versions – UTGL 5P
 
+## Manuel d’utilisation 1.7.0 – 27 novembre 2026
+- Écran Aide & formation › Manuel d’utilisation : lien vers le manuel 1.7.0 (PDF, 91 pages), qui couvre en une seule mise à jour les versions 1.5 à 1.7 (rapports de mission, indicateurs SMART, produits traceurs, gestion des risques, rapport narratif, version anglaise) ; captures d’écran refaites sur des comptes de test. Fichier hébergé sur OneDrive (lien en lecture seule).
+
 ## v1.7.0 – 27 novembre 2026 (version anglaise)
 - Application bilingue : boutons FR / EN dans la barre supérieure (et sur la page d’accès) ; le choix est mémorisé sur l’appareil. Le français reste la langue de référence.
 - Traduction de l’ensemble de l’interface (menus, écrans, tableaux, graphiques, messages, page d’accès et gestion des comptes) à partir d’un dictionnaire de 3 565 libellés, dont le référentiel des 71 risques et des 17 KRI.
