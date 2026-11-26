@@ -1,5 +1,12 @@
 # Historique des versions – UTGL 5P
 
+## v1.7.1 – 27 novembre 2026 (ANAMED – disponibilité nationale)
+- Choix du périmètre affiché : 26 provinces (par défaut), province sélectionnée ou provinces pilotes ; la province choisie dans le filtre du haut est surlignée. Les provinces sans donnée pour la période apparaissent avec « — » et sont listées.
+- Tableaux provinces (en lignes) × 13 programmes (en colonnes) : disponibilité, produits en rupture et, nouveau, nombre de traceurs en rupture au CDR, avec une colonne « Ensemble » et la moyenne des provinces affichées.
+- Les tuiles « Produits en rupture CDR », « Arbitrages possibles », « CDR suivies » et « Programmes suivis » ouvrent directement le tableau détaillé correspondant (nouveaux tableaux : CDR suivies, programmes suivis ; liste complète des ruptures et des arbitrages).
+- Traceurs au CDR : pour chaque province, dernier mois de la période où le CDR a transmis son stock dans DISMED (mois indiqué) ; un CDR sans stock transmis n’est pas compté en rupture.
+- Message explicite lorsque « Données validées uniquement » est actif : seules les provinces dont les imports sont validés affichent des valeurs.
+
 ## Manuel d’utilisation 1.7.0 – 27 novembre 2026
 - Écran Aide & formation › Manuel d’utilisation : lien vers le manuel 1.7.0 (PDF, 91 pages), qui couvre en une seule mise à jour les versions 1.5 à 1.7 (rapports de mission, indicateurs SMART, produits traceurs, gestion des risques, rapport narratif, version anglaise) ; captures d’écran refaites sur des comptes de test. Fichier hébergé sur OneDrive (lien en lecture seule).
 
