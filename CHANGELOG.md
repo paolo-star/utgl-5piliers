@@ -1,5 +1,11 @@
 # Historique des versions – UTGL 5P
 
+## v1.7.0 – 27 novembre 2026 (version anglaise)
+- Application bilingue : boutons FR / EN dans la barre supérieure (et sur la page d’accès) ; le choix est mémorisé sur l’appareil. Le français reste la langue de référence.
+- Traduction de l’ensemble de l’interface (menus, écrans, tableaux, graphiques, messages, page d’accès et gestion des comptes) à partir d’un dictionnaire de 3 565 libellés, dont le référentiel des 71 risques et des 17 KRI.
+- Documents exportés en anglais lorsque l’anglais est choisi : PDF, Word, Excel et PowerPoint (rapports SMART, traceurs, risques, rapport narratif, rapports de mission, rapports GTM, bulletin).
+- Les données saisies par les équipes (commentaires, analyses, contexte des risques) et les libellés officiels des produits (RUMER / INFOMED) ne sont pas traduits.
+
 ## v1.6.1 – 27 novembre 2026 (protection du registre des risques)
 - Serveur (schema_v161.sql) : l’ANAMED valide les observations du registre des risques mais ne peut ni les créer ni en modifier le contenu ; validation réservée à l’UTGL centrale, à l’ANAMED et à l’administrateur du niveau central ; identité d’une observation (clé, mois, niveau, risque) non modifiable ; une observation ne peut pas être créée « validée » ; toute modification du contenu d’une observation validée la remet « à valider » (9 cas testés, tous conformes).
 
