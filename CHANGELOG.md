@@ -1,5 +1,14 @@
 # Historique des versions – UTGL 5P
 
+## v1.8.3 – 27 novembre 2026 (navigation par clic vers le détail ; Tour de contrôle centrale filtrée par province)
+- Tour de contrôle centrale : la province choisie dans le filtre du haut est désormais appliquée (affichage de cette province seule, avec sa fiche de scores) ; boutons « Afficher » : 26 provinces, province sélectionnée, provinces pilotes. En vue 26 provinces, la province du filtre est encadrée en orange dans la carte et les tableaux. Tuiles, barres, tableaux, en-tête et export Power BI suivent le périmètre affiché.
+- Tour de contrôle centrale : nouveau tableau « Détail » (provinces critiques, fragiles, performantes, couverture des données, confiance analytique pilier par pilier, statut des KPI de chaque pilier par province), ouvert par un clic sur une tuile ou une barre ; chaque cellule de la consolidation nationale mène aux Décisions DPS, aux KPI du pilier, à la Tour de contrôle UTGL ou au registre CAPA de la province.
+- Navigation par clic vers le tableau détaillé sur tous les écrans à tuiles ou tableaux de résultats : Portail, Décisions DPS (liste des traceurs du CDR filtrée par statut), Zone de santé, Tour de contrôle UTGL, KPI des 5 Piliers (fiches filtrées par statut, carte de chaleur), ANAMED (cellules des tableaux par programme et des CDR), COPIL, Registre des alertes, Rapports de mission, Indicateurs SMART, Redistributions (niveaux et étapes du circuit), Réapprovisionnement, Registre CAPA (nouveaux filtres « Ouvertes » et « En retard »).
+- Écrans ANAMED et Tour de contrôle centrale : le bandeau « PROVISOIRE » (données non validées) est de nouveau affiché.
+
+## Manuel d’utilisation 1.8.1 – 27 novembre 2026
+- Nouvelle section 2.10 (navigation par clic), section 5.6 (Tour de contrôle centrale) refondue, sections 2.3, 5.2, 5.4, 5.5, 5.7, 5.8, 5.11, 5.23, 5.25, 5.29 et 9 mises à jour, procédure 6.28 ; nouvelles captures sur des comptes de test (104 pages).
+
 ## v1.8.2 – 27 novembre 2026 (méthode de score et libellés des normes)
 - Méthode de score : la méthode « V8.2 stricte » (rapprochement avec le classeur) n’est plus proposée qu’aux profils nationaux (administrateur, UTGL centrale, ANAMED, ministère / COPIL). Les profils DPS, UTGL provinciale, BCZ et Lecteur utilisent la méthode corrigée ; un choix V8.2 mémorisé sur l’appareil revient automatiquement à la méthode corrigée.
 - Registre des alertes : les textes d’explication citent désormais les normes de stock harmonisées (et non plus les anciennes règles MSD du classeur V8.2), conformément aux calculs appliqués depuis la version 1.8.0.
