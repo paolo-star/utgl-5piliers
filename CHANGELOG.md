@@ -1,5 +1,14 @@
 # Historique des versions – UTGL 5P
 
+## v1.8.4 – 27 novembre 2026 (un seul jeu de filtres par écran ; COPIL filtré par province)
+- COPIL – tableau de bord exécutif : la province choisie dans le filtre du haut est appliquée (boutons « Afficher » : 26 provinces, province sélectionnée, provinces pilotes) ; tuiles, priorisation, CAPA, évolution trimestrielle et note COPIL suivent le périmètre ; en vue 26 provinces, la province du filtre est encadrée dans la priorisation.
+- Bandeau du haut : seuls les filtres qui agissent sur l’écran ouvert sont affichés. Les champs en double sont retirés sur les écrans qui ont leurs propres filtres (Produits traceurs, SMART, Alertes, Missions, Risques, Rapport narratif, Rapports GTM, Bulletin, Réapprovisionnement, Registre CAPA, Formulaire, Cibles, Clôture des périodes) et sur les écrans où ils n’ont aucun effet (Portail pour la province ; Extraction, Référentiel, Rôles & audit, Aide).
+- Province commune à tout l’outil : une province choisie dans le filtre d’un écran devient la province de l’outil et est reprise par les écrans ouverts ensuite (sauf choix « National » ou « Provinces pilotes »).
+- Registre CAPA : le bouton « Proposer les CAPA » porte sur la province du filtre du registre (désactivé avec « Toutes provinces »).
+
+## Manuel d’utilisation 1.8.2 – 27 novembre 2026
+- Section 2.3 (un seul jeu de filtres par écran, tableau des filtres conservés), sections 5.8 (COPIL), 5.11 (CAPA) et 9 mises à jour ; 105 pages.
+
 ## v1.8.3 – 27 novembre 2026 (navigation par clic vers le détail ; Tour de contrôle centrale filtrée par province)
 - Tour de contrôle centrale : la province choisie dans le filtre du haut est désormais appliquée (affichage de cette province seule, avec sa fiche de scores) ; boutons « Afficher » : 26 provinces, province sélectionnée, provinces pilotes. En vue 26 provinces, la province du filtre est encadrée en orange dans la carte et les tableaux. Tuiles, barres, tableaux, en-tête et export Power BI suivent le périmètre affiché.
 - Tour de contrôle centrale : nouveau tableau « Détail » (provinces critiques, fragiles, performantes, couverture des données, confiance analytique pilier par pilier, statut des KPI de chaque pilier par province), ouvert par un clic sur une tuile ou une barre ; chaque cellule de la consolidation nationale mène aux Décisions DPS, aux KPI du pilier, à la Tour de contrôle UTGL ou au registre CAPA de la province.
