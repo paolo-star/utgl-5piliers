@@ -1,5 +1,12 @@
 # Historique des versions – UTGL 5P
 
+## v1.8.2 – 27 novembre 2026 (méthode de score et libellés des normes)
+- Méthode de score : la méthode « V8.2 stricte » (rapprochement avec le classeur) n’est plus proposée qu’aux profils nationaux (administrateur, UTGL centrale, ANAMED, ministère / COPIL). Les profils DPS, UTGL provinciale, BCZ et Lecteur utilisent la méthode corrigée ; un choix V8.2 mémorisé sur l’appareil revient automatiquement à la méthode corrigée.
+- Registre des alertes : les textes d’explication citent désormais les normes de stock harmonisées (et non plus les anciennes règles MSD du classeur V8.2), conformément aux calculs appliqués depuis la version 1.8.0.
+
+## Manuel d’utilisation 1.8.0 – 27 novembre 2026
+- Mise à jour couvrant les versions 1.7.1 à 1.8.2 : écran ANAMED refondu, normes de stock harmonisées, écran Redistributions et circuit des transferts, avis « À traiter », méthode de score ; nouvelles captures sur des comptes de test (99 pages).
+
 ## v1.8.1 – 27 novembre 2026 (avis d’ouverture cliquable)
 - À l’ouverture du profil, l’avis « À traiter » reste affiché jusqu’à sa fermeture (×) et se lit facilement (texte plus grand). Chaque ligne est cliquable et ouvre directement l’écran détaillé : nouvelles alertes, alertes ouvertes de la province (fiche ouverte directement s’il n’y en a qu’une), transferts de redistribution qui attendent une action du profil.
 - Les messages courts de confirmation restent affichés plus longtemps selon leur longueur et ne disparaissent pas tant que la souris est dessus.
