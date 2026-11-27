@@ -1,5 +1,11 @@
 # Historique des versions – UTGL 5P
 
+## v1.8.0 – 27 novembre 2026 (normes de stock uniques et redistributions)
+- Normes de stock uniques pour tous les écrans (statuts des traceurs, alertes, rapport des traceurs, rapport narratif, ANAMED, Décisions DPS, Réapprovisionnement, rapports exportés) : CDR 3 à 6 mois, BCZ 1 à 3 mois, ESS 1 à 2 mois, paramétrables dans Réapprovisionnement & QAT. Rupture = 0 (au CDR : stock 0 avec consommation) ; sous-stock = sous le minimum ; surstock = au-delà du maximum. Les anciens seuils du classeur V8.2 (CDR surstock > 3 ; ESS/BCZ sous-stock < 4, normal 7 à 15, surstock > 15) ne sont plus utilisés ; la catégorie « à surveiller » disparaît.
+- Nouvel écran « Redistributions » (Performance & décisions) : propositions chiffrées à quatre niveaux – BCZ → ESS et CDR → BCZ dans la province, entre CDR (interprovincial), signal entre BCZ (sans quantité, faute de stock par BCZ et par produit dans INFOMED). Un donneur doit être au-delà du maximum, un receveur sous le minimum ; la quantité ramène les deux vers la moyenne normale de la norme ; MSD avant et après affichés.
+- Circuit de chaque transfert : proposé → approuvé (DPS pour les transferts internes, ANAMED entre CDR) ou rejeté (motif obligatoire) → expédié (quantité, lot, péremption, bordereau) → reçu (quantité, écart justifié). Bon de transfert exportable (Word), export Excel, lien avec une CAPA, journal d’audit. Règles contrôlées par le serveur (schéma v1.8.0).
+- Décisions DPS, ANAMED – disponibilité, Réapprovisionnement et Registre des alertes renvoient vers l’écran Redistributions ; les redistributions entre CDR utilisent partout le même calcul.
+
 ## v1.7.1 – 27 novembre 2026 (ANAMED – disponibilité nationale)
 - Choix du périmètre affiché : 26 provinces (par défaut), province sélectionnée ou provinces pilotes ; la province choisie dans le filtre du haut est surlignée. Les provinces sans donnée pour la période apparaissent avec « — » et sont listées.
 - Tableaux provinces (en lignes) × 13 programmes (en colonnes) : disponibilité, produits en rupture et, nouveau, nombre de traceurs en rupture au CDR, avec une colonne « Ensemble » et la moyenne des provinces affichées.
