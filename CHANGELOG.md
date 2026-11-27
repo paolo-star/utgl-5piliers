@@ -7,6 +7,7 @@
 - Écrans ANAMED et Tour de contrôle centrale : le bandeau « PROVISOIRE » (données non validées) est de nouveau affiché.
 
 ## Manuel d’utilisation 1.8.1 – 27 novembre 2026
+- Disponible dans l’application (Aide & formation › Manuel d’utilisation), lien OneDrive mis à jour.
 - Nouvelle section 2.10 (navigation par clic), section 5.6 (Tour de contrôle centrale) refondue, sections 2.3, 5.2, 5.4, 5.5, 5.7, 5.8, 5.11, 5.23, 5.25, 5.29 et 9 mises à jour, procédure 6.28 ; nouvelles captures sur des comptes de test (104 pages).
 
 ## v1.8.2 – 27 novembre 2026 (méthode de score et libellés des normes)
