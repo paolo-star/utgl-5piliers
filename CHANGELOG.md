@@ -1,5 +1,12 @@
 # Historique des versions – UTGL 5P
 
+## v1.9.0 – 28 novembre 2026 (transferts entre ESS)
+- Nouvel écran « Transferts entre ESS » (Performance & décisions) : propositions de transfert entre établissements de soins de santé calculées à partir du stock par ESS et par produit : CMM ajustée des jours de rupture (aide-mémoire national de quantification), mois de stock disponible, normes ESS min/max de l’outil, donneur au-delà du maximum, receveur sous le minimum ou en rupture, quantité ramenant les deux vers le milieu de la norme, contrôle de la péremption, recherche d’un donneur d’abord dans la même zone de santé, puis dans une autre zone de la province.
+- Circuit de revue et de validation : proposé → revu par le BCZ (stock physique, lots, DLU) → approuvé par le MCZ (même zone) ou la DPS (entre zones, ou en cas de retard) → expédié → reçu ; motif obligatoire en cas de rejet ; délais et alertes de retard ; contrôle par le serveur (script schema_v19.sql).
+- Nouveau profil « Médecin chef de zone (MCZ) ».
+- Onglets « Calcul pas à pas », « Synthèse pour le GTM » (rejets, receveurs récurrents, délais, écarts) et « Règles et paramètres » ; mode démonstration sur données fictives, non enregistrées.
+- Import du stock par ESS (fichier de l’extracteur INFOMED ou tableau Excel) ; l’extraction INFOMED correspondante est en cours d’intégration.
+
 ## v1.8.4 – 27 novembre 2026 (un seul jeu de filtres par écran ; COPIL filtré par province)
 - COPIL – tableau de bord exécutif : la province choisie dans le filtre du haut est appliquée (boutons « Afficher » : 26 provinces, province sélectionnée, provinces pilotes) ; tuiles, priorisation, CAPA, évolution trimestrielle et note COPIL suivent le périmètre ; en vue 26 provinces, la province du filtre est encadrée dans la priorisation.
 - Bandeau du haut : seuls les filtres qui agissent sur l’écran ouvert sont affichés. Les champs en double sont retirés sur les écrans qui ont leurs propres filtres (Produits traceurs, SMART, Alertes, Missions, Risques, Rapport narratif, Rapports GTM, Bulletin, Réapprovisionnement, Registre CAPA, Formulaire, Cibles, Clôture des périodes) et sur les écrans où ils n’ont aucun effet (Portail pour la province ; Extraction, Référentiel, Rôles & audit, Aide).
